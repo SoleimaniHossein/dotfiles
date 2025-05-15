@@ -1,0 +1,36 @@
+# config  PATH
+PATH=$PATH:~/.local/bin
+PATH=$PATH:~/.tmux/plugins/tmuxifier/bin
+
+# config gvm (golang version manager)
+[[ -s "/home/delta/.gvm/scripts/gvm" ]] && source "/home/delta/.gvm/scripts/gvm"
+export PATH=$PATH:$(go env GOPATH)/bin
+
+# config nvm (node version manager)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
+
+# custom alias
+alias ll='ls -latr'
+alias vim='nvim'
+alias blender='/home/delta/Programs/blender-4.3.2-linux-x64/blender'
+
+# custom variable
+EDITOR='vim'
+
+# config pyenv (python management environment)
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+# config proxy
+export http_proxy=127.0.0.1:9051
+#export no_proxy="localhost, 127.0.0.1"
+#export HTTP_PROXY=192.168.32.139:8080
+
+. "$HOME/.cargo/env"
+
+unset LD_PRELOAD
+___MY_VMOPTIONS_SHELL_FILE="${HOME}/.jetbrains.vmoptions.sh"
+if [ -f "${___MY_VMOPTIONS_SHELL_FILE}" ]; then . "${___MY_VMOPTIONS_SHELL_FILE}"; fi
