@@ -13,4 +13,6 @@ if ! command -v getnf &>/dev/null; then
   curl -s https://raw.githubusercontent.com/ronniedroid/getnf/main/install.sh | bash
 fi
 
-getnf JetBrainsMono FiraCode Hack SourceCodePro
+getnf JetBrainsMono FiraCode Hack SourceCodePro CascadiaCode
+
+#getnf 0xProto 3270 CascadiaCode CascadiaMono FiraCode Hack Monaspace NerdFontsSymbolsOnly ProFont
