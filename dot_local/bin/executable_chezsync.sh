@@ -120,23 +120,7 @@ apply_changes() {
   done <<<"$1"
 }
 
-main() {
-  echo "${GREEN}🔍 Checking for dotfile changes...${RESET}"
-  changes=$(get_changes)
-
-  if [ -z "$changes" ]; then
-    echo "✅ No changes detected."
-    exit 0
-  fi
-
-  selected=$(select_changes "$changes")
-  if [ -z "$selected" ]; then
-    echo "${YELLOW}⚠️ No changes selected. Exiting.${RESET}"
-    exit 0
-  fi
-
-  apply_changes "$selected"
-
+detect_new_files_in_source() {
   repo_dir=$($CHEZMOI_CMD source-path)
   pushd "$repo_dir" >/dev/null || {
     echo "${RED}❌ Failed to access chezmoi source directory${RESET}"
@@ -144,6 +128,7 @@ main() {
   }
 
   if [ -n "$($GIT_CMD status --porcelain)" ]; then
+    echo "${YELLOW}🔍 Detecting new or modified files in chezmoi source directory...${RESET}"
     $GIT_CMD add --all
     $GIT_CMD commit -m "🔄 Dotfiles update [$(date +%Y-%m-%d)]"
     $GIT_CMD push
@@ -153,6 +138,25 @@ main() {
   fi
 
   popd >/dev/null || true
+}
+
+main() {
+  echo "${GREEN}🔍 Checking for dotfile changes...${RESET}"
+  changes=$(get_changes)
+
+  if [ -z "$changes" ]; then
+    echo "✅ No changes detected."
+  else
+    selected=$(select_changes "$changes")
+    if [ -z "$selected" ]; then
+      echo "${YELLOW}⚠️ No changes selected. Exiting.${RESET}"
+      exit 0
+    fi
+
+    apply_changes "$selected"
+  fi
+
+  detect_new_files_in_source
 }
 
 main "$@"
