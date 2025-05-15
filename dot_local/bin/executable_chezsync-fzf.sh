@@ -1,13 +1,14 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 green=$(tput setaf 2)
 reset=$(tput sgr0)
 
-echo "${green}🔍 Finding modified files managed by chezmoi...${reset}"
+echo "${green}🔍 Finding changed files managed by chezmoi...${reset}"
 
-changed_files=$(chezmoi diff | grep '^files/' | sed 's/^files\///')
+# فقط نام فایل‌ها که تغییر یا اضافه شدن
+changed_files=$(chezmoi status | awk '{print $2}')
 
 if [ -z "$changed_files" ]; then
   echo "✅ No modified files found."
@@ -23,7 +24,7 @@ fi
 
 echo "$selected_files" | while read -r file; do
   echo "➕ Adding: $file"
-  chezmoi add "$HOME/$file"
+  chezmoi add "$file"
 done
 
 cd "$(chezmoi source-path)"
