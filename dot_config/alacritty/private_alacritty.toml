@@ -15,5 +15,5 @@ foreground = "#cdd6f4"  # Default text color
 normal.family = "CaskaydiaMono Nerd Font"
 #normal.family = "FiraCode Nerd Font"
 normal.style = "Regular"
-size = 13.0
+size = 14.0
 
