@@ -1,13 +1,19 @@
 [window]
 opacity = 0.95
 decorations = "none"  # Remove title bar
-padding = { x = 5, y = 5 }
+padding = { x = 1, y = 1 }
 
 [colors.primary]
 background = "#1e1e2e"  # Catppuccin/Nord background
 foreground = "#cdd6f4"  # Default text color
 
 [terminal]
+  [terminal.shell]
+  program = "/usr/bin/tmux"
 
-[terminal.shell]
-program = "/usr/bin/tmux"
+[font]
+normal.family = "CaskaydiaMono Nerd Font"
+#normal.family = "FiraCode Nerd Font"
+normal.style = "Regular"
+size = 12.0
+
