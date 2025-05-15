@@ -7,7 +7,6 @@ reset=$(tput sgr0)
 
 echo "${green}🔍 Finding changed files managed by chezmoi...${reset}"
 
-# فقط نام فایل‌ها که تغییر یا اضافه شدن
 changed_files=$(chezmoi status | awk '{print $2}')
 
 if [ -z "$changed_files" ]; then
