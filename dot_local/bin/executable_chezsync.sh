@@ -16,16 +16,37 @@ BOLD=$(tput bold)
 RESET=$(tput sgr0)
 
 get_changes() {
-  $CHEZMOI_CMD status | awk '{
+  # Changes from chezmoi status
+  local chezmoi_changes
+  chezmoi_changes=$($CHEZMOI_CMD status | awk '{
     status = $1
     path = $2
-    # Normalize status codes:
     if (status == "MM" || status == "M") status = "M"
     else if (status == "A") status = "A"
     else if (status == "D" || status == "R") status = "D"
     else if (status == "DA") status = "DA"
     print status "\t" path
-  }'
+  }')
+
+  # Changes from git status (in chezmoi source directory)
+  local repo_dir=$($CHEZMOI_CMD source-path)
+  local git_changes
+  cd "$repo_dir" || exit 1
+  git_changes=$($GIT_CMD status --porcelain | awk '
+    {
+      status_code = substr($0,1,2)
+      file = substr($0,4)
+      if (status_code ~ /^[?A]/) {
+        print "A\t" file
+      } else if (status_code ~ /^[ D]/) {
+        print "D\t" file
+      } else if (status_code ~ /^[ M]/) {
+        print "M\t" file
+      }
+    }')
+
+  # Combine and unique
+  echo -e "$chezmoi_changes\n$git_changes" | sort -u
 }
 
 select_changes() {
@@ -51,7 +72,7 @@ select_changes() {
 handle_rename() {
   local old_path="$1"
 
-  # Use fzf-tmux to get the new path with a proper prompt
+  # Ask new path or new name via fzf-tmux prompt
   new_path=$(echo "" | $FZF_TMUX_CMD --print-query \
     --header="♻️ Renaming: ${BOLD}$old_path${RESET}
 Enter new path (relative to home):" \
@@ -71,7 +92,6 @@ Enter new path (relative to home):" \
 
   echo "${CYAN}♻️ Renaming $old_path to $new_path${RESET}"
 
-  # Remove old file
   $CHEZMOI_CMD forget "$old_path" || {
     echo "${YELLOW}⚠️ Failed to forget old file, trying destroy...${RESET}"
     $CHEZMOI_CMD destroy "$old_path" || {
@@ -80,7 +100,6 @@ Enter new path (relative to home):" \
     }
   }
 
-  # Add new file
   $CHEZMOI_CMD add "$new_path" || {
     echo "${RED}❌ Failed to add new file $new_path${RESET}"
     return 1
@@ -120,7 +139,23 @@ apply_changes() {
   done <<<"$1"
 }
 
-detect_new_files_in_source() {
+main() {
+  echo "${GREEN}🔍 Checking for dotfile changes...${RESET}"
+  changes=$(get_changes)
+
+  if [ -z "$changes" ]; then
+    echo "✅ No changes detected."
+    exit 0
+  fi
+
+  selected=$(select_changes "$changes")
+  if [ -z "$selected" ]; then
+    echo "${YELLOW}⚠️ No changes selected. Exiting.${RESET}"
+    exit 0
+  fi
+
+  apply_changes "$selected"
+
   repo_dir=$($CHEZMOI_CMD source-path)
   pushd "$repo_dir" >/dev/null || {
     echo "${RED}❌ Failed to access chezmoi source directory${RESET}"
@@ -128,7 +163,6 @@ detect_new_files_in_source() {
   }
 
   if [ -n "$($GIT_CMD status --porcelain)" ]; then
-    echo "${YELLOW}🔍 Detecting new or modified files in chezmoi source directory...${RESET}"
     $GIT_CMD add --all
     $GIT_CMD commit -m "🔄 Dotfiles update [$(date +%Y-%m-%d)]"
     $GIT_CMD push
@@ -138,25 +172,6 @@ detect_new_files_in_source() {
   fi
 
   popd >/dev/null || true
-}
-
-main() {
-  echo "${GREEN}🔍 Checking for dotfile changes...${RESET}"
-  changes=$(get_changes)
-
-  if [ -z "$changes" ]; then
-    echo "✅ No changes detected."
-  else
-    selected=$(select_changes "$changes")
-    if [ -z "$selected" ]; then
-      echo "${YELLOW}⚠️ No changes selected. Exiting.${RESET}"
-      exit 0
-    fi
-
-    apply_changes "$selected"
-  fi
-
-  detect_new_files_in_source
 }
 
 main "$@"
